@@ -1,4 +1,41 @@
 import psycopg2
+import pandas as pd
+
+def write_to_target_db(host, database, user, password, port,table_name,data):
+    conn = psycopg2.connect(
+    host=host,
+    database=database,
+    user=user,
+    password=password,
+    port=port
+    )
+    
+    # Create a cursor object to interact with the database
+    cursor = conn.cursor()
+    rows=data
+    # Define the table name
+    table_name = table_name
+    # Get the column names from the table
+    cursor.execute(f"SELECT * FROM {table_name} LIMIT 0")
+    column_names = [desc[0] for desc in cursor.description]
+    #truncate the target table
+    cursor.execute(f"Delete from {table_name}")
+    # Generate the SQL query dynamically based on the column names
+    insert_query = f"INSERT INTO {table_name} ({', '.join(column_names)}) VALUES "
+    # Generate the placeholders for the values
+    value_placeholders = ', '.join(['%s'] * len(column_names))
+
+    rows = data.values.tolist()  # Convert dataframe to a list of lists
+    # Convert each list to a tuple
+    data_tuples = [tuple(row) for row in rows]
+
+    # Execute the insert query with the data
+    cursor.executemany(insert_query + f"({value_placeholders})", rows)
+    # Commit the transaction to save the changes
+    conn.commit()
+    # Close the cursor and the database connection
+    cursor.close()
+    conn.close()
 
 # Establish a connection to the PostgreSQL database
 conn = psycopg2.connect(
@@ -9,30 +46,17 @@ conn = psycopg2.connect(
     port="8083"
 )
 
-# Create a cursor object to interact with the database
-cursor = conn.cursor()
+def main():
+    # Create a cursor object to interact with the database
+    cursor = conn.cursor()
 
-cursor.execute("Select * FROM customer_prod limit 10" )
-rows = cursor.fetchall()
+    cursor.execute("Select * FROM customer_prod limit 10" )
+    rows = cursor.fetchall()
+    column_headers = [desc[0] for desc in cursor.description]
+    rows = pd.DataFrame(rows, columns=column_headers)
+    write_to_target_db("10.235.81.97","CodeGames","postgres","Demo123$","8083","customer_qa",rows)
+    cursor.close()
+    conn.close()
 
-
-# Define the table name
-table_name = "customer_qa"
-
-# Get the column names from the table
-cursor.execute(f"SELECT * FROM {table_name} LIMIT 0")
-column_names = [desc[0] for desc in cursor.description]
-#truncate the target table
-cursor.execute(f"Delete from {table_name}")
-# Generate the SQL query dynamically based on the column names
-insert_query = f"INSERT INTO {table_name} ({', '.join(column_names)}) VALUES "
-# Generate the placeholders for the values
-value_placeholders = ', '.join(['%s'] * len(column_names))
-# Execute the insert query with the data
-cursor.executemany(insert_query + f"({value_placeholders})", rows)
-# Commit the transaction to save the changes
-conn.commit()
-
-# Close the cursor and the database connection
-cursor.close()
-conn.close()
+if __name__ == "__main__":
+    main()
