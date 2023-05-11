@@ -36,27 +36,3 @@ def write_to_target_db(host, database, user, password, port,table_name,data):
     # Close the cursor and the database connection
     cursor.close()
     conn.close()
-
-# Establish a connection to the PostgreSQL database
-conn = psycopg2.connect(
-    host="10.235.81.97",
-    database="CodeGames",
-    user="postgres",
-    password="Demo123$",
-    port="8083"
-)
-
-def main():
-    # Create a cursor object to interact with the database
-    cursor = conn.cursor()
-
-    cursor.execute("Select * FROM customer_prod limit 10" )
-    rows = cursor.fetchall()
-    column_headers = [desc[0] for desc in cursor.description]
-    rows = pd.DataFrame(rows, columns=column_headers)
-    write_to_target_db("10.235.81.97","CodeGames","postgres","Demo123$","8083","customer_qa",rows)
-    cursor.close()
-    conn.close()
-
-if __name__ == "__main__":
-    main()
