@@ -68,7 +68,7 @@ def datamask(rows,column_headers,columns,type):
             lambda x: 
             scramble_string(x)
             )
-        if column_type == 'ID' or column_type == 'Text':
+        if column_type == 'Id' or column_type == 'Text':
             df[column] = df[column].apply(
             lambda x: 
             hashlib.sha256(x.encode()).hexdigest()
