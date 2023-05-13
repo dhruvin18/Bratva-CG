@@ -1,5 +1,6 @@
 import psycopg2
 import pandas as pd
+from psycopg2 import extras
 
 def write_to_target_db(host, database, user, password, port,table_name,data):
     conn = psycopg2.connect(
@@ -24,11 +25,7 @@ def write_to_target_db(host, database, user, password, port,table_name,data):
     insert_query = f"INSERT INTO {table_name} ({', '.join(column_names)}) VALUES "
     # Generate the placeholders for the values
     value_placeholders = ', '.join(['%s'] * len(column_names))
-
     rows = data.values.tolist()  # Convert dataframe to a list of lists
-    # Convert each list to a tuple
-    data_tuples = [tuple(row) for row in rows]
-
     # Execute the insert query with the data
     cursor.executemany(insert_query + f"({value_placeholders})", rows)
     # Commit the transaction to save the changes
