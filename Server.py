@@ -24,7 +24,7 @@ def Check_Connection():
         conn = psycopg2.connect(host=host, database=database, user=user, password=password, port=port)
         curr=conn.cursor()
         print(str(datetime.now())+ ": DB connection End")   
-        curr.execute("Select * FROM customer_prod limit 100" )
+        curr.execute("Select * FROM customer_prod" )
         rows = curr.fetchall()
         print(str(datetime.now())+ ": Data Fetch ENd")   
         column_headers = [desc[0] for desc in curr.description]

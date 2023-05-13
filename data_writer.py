@@ -1,6 +1,7 @@
 import psycopg2
 import pandas as pd
 from psycopg2 import extras
+from sqlalchemy import create_engine 
 
 def write_to_target_db(host, database, user, password, port,table_name,data):
     conn = psycopg2.connect(
@@ -13,21 +14,17 @@ def write_to_target_db(host, database, user, password, port,table_name,data):
     
     # Create a cursor object to interact with the database
     cursor = conn.cursor()
-    rows=data
+    # rows=data
     # Define the table name
     table_name = table_name
-    # Get the column names from the table
-    cursor.execute(f"SELECT * FROM {table_name} LIMIT 0")
-    column_names = [desc[0] for desc in cursor.description]
+
     #truncate the target table
     cursor.execute(f"Delete from {table_name}")
-    # Generate the SQL query dynamically based on the column names
-    insert_query = f"INSERT INTO {table_name} ({', '.join(column_names)}) VALUES "
-    # Generate the placeholders for the values
-    value_placeholders = ', '.join(['%s'] * len(column_names))
-    rows = data.values.tolist()  # Convert dataframe to a list of lists
-    # Execute the insert query with the data
-    cursor.executemany(insert_query + f"({value_placeholders})", rows)
+    # Create a database engine using SQLAlchemy
+    engine = create_engine('postgresql+psycopg2://'+str(user)+':'+str(password)+'@'+str(host)+':'+str(port)+'/'+str(database))
+
+    # Write the dataframe records to the existing table
+    data.to_sql(table_name, engine, if_exists='append', index=False)
     # Commit the transaction to save the changes
     conn.commit()
     # Close the cursor and the database connection
